@@ -1,0 +1,10 @@
+services:
+  ads-assistant:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./plans:/app/plans
+      - ./logs:/app/logs
+    working_dir: /app
