@@ -3,7 +3,7 @@
 A locally hosted, containerized command-line assistant for Google Ads management.
 It has two commands:
 
-- `plan`: collect Google Ads, Keyword Planner, auction-visibility proxy, and SerpAPI competitor data, then ask Anthropic to produce a reviewable JSON execution plan.
+- `plan`: collect Google Ads, Keyword Planner, auction-visibility proxy, and current ad copy data, then ask Anthropic to produce a reviewable JSON execution plan.
 - `apply`: read a previously generated JSON plan and apply only actions that are explicitly marked `"approved": true`.
 
 The AI planning layer never mutates Google Ads. It only writes recommendations to a local JSON file.
@@ -12,7 +12,7 @@ The AI planning layer never mutates Google Ads. It only writes recommendations t
 
 ```bash
 cp .env.example .env
-# edit .env with Google Ads, Anthropic, and optional SerpAPI credentials
+# edit .env with Google Ads and Anthropic credentials
 
 docker compose build
 docker compose run --rm ads-assistant plan --output plans/execution-plan.json
@@ -63,7 +63,6 @@ The `plan` command collects:
 - Current ad copy and landing URLs
 - Keyword Planner ideas
 - Auction visibility proxy metrics from Google Ads impression-share fields
-- Competitor ad copy, landing pages, keyword overlap, and SERP visibility from SerpAPI when configured
 
 Useful options:
 
@@ -142,15 +141,11 @@ The generated file is an envelope around the planner output:
 ## Notes On Data Availability
 
 Google Ads does not expose every Auction Insights UI field through the public API.
-This app captures available campaign and keyword impression-share metrics as auction-visibility proxies, then augments competitor analysis through SerpAPI where configured.
-
-Competitor ad copy and landing page signals are collected from live search results and optional Google Ads Transparency Center lookups through SerpAPI. These are market signals, not account mutations.
+This app captures available campaign and keyword impression-share metrics as auction-visibility proxies.
+No external competitor-signal API is required.
 
 ## Configuration References
 
 - [Google Ads Python client configuration](https://developers.google.com/google-ads/api/docs/client-libs/python/configuration)
 - [Google Ads API field reference](https://developers.google.com/google-ads/api/fields/v24/overview)
 - [Anthropic Messages API](https://docs.anthropic.com/en/api/messages)
-- [SerpAPI Google Search API](https://serpapi.com/google-search-api)
-- [SerpAPI Google Ads Transparency Center API](https://serpapi.com/google-ads-transparency-center-api)
-

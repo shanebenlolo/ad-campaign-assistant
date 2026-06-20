@@ -7,7 +7,6 @@ from typing import Any
 
 from .google_ads import GoogleAdsDataCollector, GoogleAdsPlanApplier, build_google_ads_client
 from .planner import AnthropicPlanner, summarize_data_sources
-from .serpapi import SerpApiCollector
 from .settings import Settings
 from .utils import normalize_customer_id, read_json, utc_now_iso, write_json, write_jsonl
 
@@ -53,7 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--keyword-seed",
         action="append",
         default=[],
-        help="Keyword seed for Keyword Planner and SERP competitor checks. Repeatable.",
+        help="Keyword seed for Keyword Planner. Repeatable.",
     )
     plan_parser.add_argument(
         "--location-id",
@@ -64,11 +63,6 @@ def build_parser() -> argparse.ArgumentParser:
     plan_parser.add_argument(
         "--language-id",
         help="Keyword Planner language constant ID.",
-    )
-    plan_parser.add_argument(
-        "--skip-serpapi",
-        action="store_true",
-        help="Skip SerpAPI competitor-signal collection even when configured.",
     )
     plan_parser.add_argument(
         "--save-input-snapshot",
@@ -129,18 +123,8 @@ def run_plan(args: argparse.Namespace) -> int:
         language_id=language_id,
     )
 
-    serpapi_data = {"status": "skipped", "reason": "Skipped by --skip-serpapi."}
-    if not args.skip_serpapi:
-        serp_keywords = _keywords_for_serpapi(google_ads_data, args.keyword_seed)
-        print(
-            f"Collecting competitor SERP signals for {len(serp_keywords)} queries...",
-            flush=True,
-        )
-        serpapi_data = SerpApiCollector(settings).collect(serp_keywords)
-
     collected_data = {
         "google_ads": google_ads_data,
-        "serpapi": serpapi_data,
     }
     if args.save_input_snapshot:
         snapshot_path = output_path.with_suffix(".input.json")
@@ -268,32 +252,6 @@ def _plan_actions(plan: dict[str, Any]) -> list[dict[str, Any]]:
     if not isinstance(actions, list):
         raise ValueError("Plan file does not contain an execution_plan.actions list")
     return actions
-
-
-def _keywords_for_serpapi(
-    google_ads_data: dict[str, Any], explicit_seeds: list[str]
-) -> list[str]:
-    keywords: list[str] = []
-    keywords.extend(explicit_seeds)
-
-    for row in google_ads_data.get("reports", {}).get("search_terms", []):
-        term = row.get("search_term")
-        metrics = row.get("metrics", {})
-        if term and (metrics.get("clicks", 0) or metrics.get("cost_micros", 0)):
-            keywords.append(term)
-
-    for row in google_ads_data.get("reports", {}).get("keyword_performance", []):
-        text = row.get("keyword", {}).get("text")
-        metrics = row.get("metrics", {})
-        if text and (metrics.get("clicks", 0) or metrics.get("cost_micros", 0)):
-            keywords.append(text)
-
-    for idea in google_ads_data.get("keyword_planner", {}).get("ideas", []):
-        text = idea.get("text")
-        if text:
-            keywords.append(text)
-
-    return list(dict.fromkeys(keywords))
 
 
 def main(argv: list[str] | None = None) -> None:

@@ -13,7 +13,7 @@ from .settings import Settings
 SYSTEM_PROMPT = """You are an expert Google Ads strategist.
 
 You receive normalized account data, Keyword Planner data, auction visibility proxy data,
-and competitor SERP signals. Produce a reviewable execution plan in strict JSON only.
+and current ad copy data from Google Ads. Produce a reviewable execution plan in strict JSON only.
 
 You are not allowed to modify the account. Your only job is analysis and recommendation.
 Every account change must be represented as an action object and must include enough
@@ -37,7 +37,7 @@ Return JSON with this shape:
 {
   "summary": "short executive summary",
   "diagnostics": [
-    {"theme": "wasted_spend|growth|geo|auction_visibility|competitor|creative", "finding": "...", "evidence": "..."}
+    {"theme": "wasted_spend|growth|geo|auction_visibility|creative", "finding": "...", "evidence": "..."}
   ],
   "actions": [
     {
@@ -107,13 +107,6 @@ def summarize_data_sources(collected_data: dict[str, Any]) -> dict[str, Any]:
         "auction_insights": collected_data.get("google_ads", {})
         .get("auction_insights", {})
         .get("status"),
-        "serpapi": {
-            "status": collected_data.get("serpapi", {}).get("status"),
-            "search_results": len(collected_data.get("serpapi", {}).get("search_results", [])),
-            "keyword_overlap": len(
-                collected_data.get("serpapi", {}).get("keyword_overlap", [])
-            ),
-        },
         "availability_notes": collected_data.get("google_ads", {}).get(
             "availability_notes", []
         ),
@@ -180,12 +173,8 @@ class AnthropicPlanner:
         if isinstance(keyword_planner.get("ideas"), list):
             keyword_planner["ideas"] = keyword_planner["ideas"][:50]
 
-        serpapi = payload.get("serpapi", {})
-        if isinstance(serpapi.get("search_results"), list):
-            serpapi["search_results"] = serpapi["search_results"][:5]
         payload["truncation_note"] = (
             f"Input exceeded ANTHROPIC_MAX_INPUT_CHARS={max_chars}; lower-priority "
             "rows were trimmed before planning."
         )
         return payload
-

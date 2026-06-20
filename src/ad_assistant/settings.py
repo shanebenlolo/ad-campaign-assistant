@@ -66,19 +66,6 @@ class Settings:
     anthropic_temperature: float
     anthropic_max_input_chars: int
 
-    serpapi_api_key: str | None
-    serpapi_max_queries: int
-    serpapi_location: str | None
-    serpapi_gl: str
-    serpapi_hl: str
-    serpapi_google_domain: str
-    serpapi_device: str
-    serpapi_competitor_domains: list[str]
-    serpapi_advertiser_ids: list[str]
-    serpapi_transparency_text: str | None
-    serpapi_transparency_region: str | None
-
-    business_domain: str | None
     default_date_range: str
     default_location_ids: list[str]
     default_language_id: str
@@ -105,18 +92,6 @@ class Settings:
             anthropic_max_tokens=_int_env("ANTHROPIC_MAX_TOKENS", 8000),
             anthropic_temperature=_float_env("ANTHROPIC_TEMPERATURE", 0.2),
             anthropic_max_input_chars=_int_env("ANTHROPIC_MAX_INPUT_CHARS", 180000),
-            serpapi_api_key=_clean(os.getenv("SERPAPI_API_KEY")),
-            serpapi_max_queries=_int_env("SERPAPI_MAX_QUERIES", 10),
-            serpapi_location=_clean(os.getenv("SERPAPI_LOCATION")),
-            serpapi_gl=_clean(os.getenv("SERPAPI_GL")) or "us",
-            serpapi_hl=_clean(os.getenv("SERPAPI_HL")) or "en",
-            serpapi_google_domain=_clean(os.getenv("SERPAPI_GOOGLE_DOMAIN")) or "google.com",
-            serpapi_device=_clean(os.getenv("SERPAPI_DEVICE")) or "desktop",
-            serpapi_competitor_domains=_csv_env("SERPAPI_COMPETITOR_DOMAINS"),
-            serpapi_advertiser_ids=_csv_env("SERPAPI_ADVERTISER_IDS"),
-            serpapi_transparency_text=_clean(os.getenv("SERPAPI_TRANSPARENCY_TEXT")),
-            serpapi_transparency_region=_clean(os.getenv("SERPAPI_TRANSPARENCY_REGION")),
-            business_domain=_clean(os.getenv("BUSINESS_DOMAIN")),
             default_date_range=_clean(os.getenv("REPORT_DATE_RANGE")) or "LAST_30_DAYS",
             default_location_ids=_csv_env("KEYWORD_PLANNER_LOCATION_IDS") or ["2840"],
             default_language_id=_clean(os.getenv("KEYWORD_PLANNER_LANGUAGE_ID")) or "1000",
@@ -141,4 +116,3 @@ class Settings:
     def require_anthropic(self) -> None:
         if not self.anthropic_api_key:
             raise RuntimeError("Missing ANTHROPIC_API_KEY")
-

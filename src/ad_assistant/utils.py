@@ -5,7 +5,6 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 
 DATE_RANGE_RE = re.compile(r"^[A-Z0-9_]+$")
@@ -64,17 +63,6 @@ def micros_to_currency(micros: int | float | None) -> float:
     return round(float(micros) / 1_000_000, 2)
 
 
-def compact_domain(url: str | None) -> str | None:
-    if not url:
-        return None
-    parsed = urlparse(url)
-    host = parsed.netloc or parsed.path
-    host = host.lower().split("@")[-1].split(":")[0]
-    if host.startswith("www."):
-        host = host[4:]
-    return host or None
-
-
 def enum_name(value: Any) -> str | None:
     if value is None:
         return None
@@ -95,4 +83,3 @@ def as_list(value: Any) -> list[Any]:
         return list(value)
     except TypeError:
         return [value]
-
